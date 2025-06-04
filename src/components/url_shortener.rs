@@ -88,8 +88,8 @@ pub fn url_shortener() -> Html {
         <div class="url-shortener">
             <div class="mb-3">{ (*long_url_state).clone() }</div>
             <div class="mb-3">
-                if !(*short_url_state).is_empty() {
-                    <a href={(*short_url_state).clone()} target="_blank" rel="noopener noreferrer">
+                if !(*short_url_state).is_empty() { // render if the state is not empty
+                    <a href={(*short_url_state).clone()} target="_blank" rel="noopener noreferrer"> // _blank opens the link in a new tab
                         { (*short_url_state).clone() }
                     </a>
                 }
