@@ -1,16 +1,19 @@
-use wasm_bindgen::JsCast;
-use web_sys::{console, HtmlInputElement};
+use wasm_bindgen::{JsCast, JsValue};
+use wasm_bindgen_futures::JsFuture;
+use web_sys::{console, HtmlInputElement, Request, Response};
 use yew::prelude::*;
 
 #[function_component(App)]
 pub fn app() -> Html {
-    let url_state = use_state(|| String::new());
+    let long_url_state = use_state(|| String::new());
+    let short_url_state = use_state(|| String::new());
 
     let on_submit_url = |field_name: String| -> Callback<SubmitEvent> {
-        let url_state = url_state.clone();
+        let long_url_state = long_url_state.clone();
+        let short_url_state = short_url_state.clone();
         Callback::from(move |ev: SubmitEvent| {
             ev.prevent_default();
-            if let Some(value) = web_sys::window()
+            if let Some(long_url) = web_sys::window()
                 .unwrap()
                 .document()
                 .unwrap()
@@ -21,10 +24,65 @@ pub fn app() -> Html {
                         .map(|input| input.value())
                 })
             {
-                console::log_1(&"Input successfully retrieved.".into());
-                url_state.set(value.clone());
+                long_url_state.set(long_url.clone());
 
-                // todo: make a shorten url request and return the shortened url
+                wasm_bindgen_futures::spawn_local(async move {
+                    let shorten_endpoint = "http://localhost:8080/v1/shorten";
+
+                    let payload = JsValue::from_str(&format!(r#"{{"longUrl": "{}"}}"#, long_url));
+
+                    let request_init = web_sys::RequestInit::new();
+                    request_init.set_method("POST");
+                    request_init.set_body(&payload);
+
+                    let headers = web_sys::Headers::new().unwrap();
+                    headers.set("Content-Type", "application/json").unwrap();
+                    request_init.set_headers(&headers);
+
+                    match Request::new_with_str_and_init(&shorten_endpoint, &request_init) {
+                        Ok(request) => {
+                            let window = web_sys::window().unwrap();
+                            match JsFuture::from(window.fetch_with_request(&request)).await {
+                                Ok(resp_value) => {
+                                    match resp_value.dyn_into::<Response>() {
+                                        Ok(response) => {
+                                            match JsFuture::from(response.json().unwrap()).await {
+                                                Ok(json_value) => {
+                                                    match json_value.as_string() {
+                                                        Some(short_url) => {
+                                                            // todo: return the response somehow
+                                                            short_url_state.set(short_url.clone());
+                                                            console::log_1(&"Response returned short url".into());
+                                                            console::log_1(&short_url.into());
+
+                                                        }
+                                                        None => { console::log_1(&"Unable to convert response to short url string".into()); }
+                                                    }
+                                                }
+                                                Err(e) => console::log_2(
+                                                    &"Failed to parse json.".into(),
+                                                    &e.into(),
+                                                ),
+                                            }
+                                        }
+                                        Err(e) => {
+                                            console::log_2(&"Response JsValue cast to Response not successful.".into(), &e.into());
+                                        }
+                                    }
+                                }
+                                Err(e) => {
+                                    console::log_2(
+                                        &"Retrieving window not successful.".into(),
+                                        &e.into(),
+                                    );
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            console::log_2(&"Request not successful.".into(), &e.into());
+                        }
+                    }
+                });
 
                 // web_sys::window().unwrap().alert_with_message(&format!("URL Submitted: {}", value.clone())).unwrap(); for debugging
             }
@@ -36,7 +94,9 @@ pub fn app() -> Html {
     html! {
         <main class="d-flex flex-column align-items-center justify-content-center min-vh-100">
 
-            <div>{ (*url_state).clone() }</div>
+            <div>{ (*long_url_state).clone() }</div>
+
+            <div>{ (*short_url_state).clone() }</div>
 
             <div>
                 <form onsubmit={on_submit_url(url_input_field_name.clone())}>
