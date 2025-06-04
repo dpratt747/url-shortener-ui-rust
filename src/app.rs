@@ -1,6 +1,5 @@
-
-use yew::prelude::*;
 use crate::components::url_shortener::UrlShortener;
+use yew::prelude::*;
 #[function_component(App)]
 pub fn app() -> Html {
     html! {

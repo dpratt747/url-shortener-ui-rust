@@ -51,14 +51,14 @@ pub fn url_shortener() -> Html {
                                     match resp_value.dyn_into::<Response>() {
                                         Ok(response) => {
                                             match JsFuture::from(response.json().unwrap()).await {
-                                                Ok(json_value) => {
-                                                    match json_value.as_string() {
-                                                        Some(short_url) => {
-                                                            short_url_state.set(short_url.clone());
-                                                        }
-                                                        None => { console::log_1(&"Unable to convert response to short url string".into()); }
+                                                Ok(json_value) => match json_value.as_string() {
+                                                    Some(short_url) => {
+                                                        short_url_state.set(short_url.clone());
                                                     }
-                                                }
+                                                    None => {
+                                                        console::log_1(&"Unable to convert response to short url string".into());
+                                                    }
+                                                },
                                                 Err(e) => console::log_2(
                                                     &"Failed to parse json.".into(),
                                                     &e.into(),
