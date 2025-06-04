@@ -8,6 +8,8 @@ pub fn url_shortener() -> Html {
     let long_url_state = use_state(|| String::new());
     let short_url_state = use_state(|| String::new());
 
+    let url_shortener_input_field_name = "url-input";
+
     let on_submit_url = {
         let long_url_state = long_url_state.clone();
         let short_url_state = short_url_state.clone();
@@ -17,7 +19,7 @@ pub fn url_shortener() -> Html {
                 .unwrap()
                 .document()
                 .unwrap()
-                .get_element_by_id("urlInput")
+                .get_element_by_id(url_shortener_input_field_name)
                 .and_then(|element| {
                     element
                         .dyn_ref::<HtmlInputElement>()
@@ -98,8 +100,8 @@ pub fn url_shortener() -> Html {
             <div>
                 <form onsubmit={on_submit_url}>
                     <div class="mb-3">
-                        <label for="urlInput" class="form-label fw-bold">{ "Enter a URL:" }</label>
-                        <input class="form-control mb-2" type="url" id="urlInput" name="urlInput" placeholder="Enter a long URL here" style="width: 100%;" required=true/>
+                        <label for={url_shortener_input_field_name} class="form-label fw-bold">{ "Enter a URL:" }</label>
+                        <input class="form-control mb-2" type="url" id={url_shortener_input_field_name} name={url_shortener_input_field_name} placeholder="Enter a long URL here" style="width: 100%;" required=true/>
                         <button class="btn btn-outline-success" type="submit">{ "Submit" }</button>
                     </div>
                 </form>
