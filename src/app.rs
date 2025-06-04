@@ -8,7 +8,7 @@ pub fn app() -> Html {
     let long_url_state = use_state(|| String::new());
     let short_url_state = use_state(|| String::new());
 
-    let on_submit_url = |field_name: String| -> Callback<SubmitEvent> {
+    let on_submit_url = {
         let long_url_state = long_url_state.clone();
         let short_url_state = short_url_state.clone();
         Callback::from(move |ev: SubmitEvent| {
@@ -17,13 +17,16 @@ pub fn app() -> Html {
                 .unwrap()
                 .document()
                 .unwrap()
-                .get_element_by_id(&field_name)
+                .get_element_by_id("urlInput")
                 .and_then(|element| {
                     element
                         .dyn_ref::<HtmlInputElement>()
                         .map(|input| input.value())
                 })
             {
+                let long_url_state = long_url_state.clone();
+                let short_url_state = short_url_state.clone();
+
                 long_url_state.set(long_url.clone());
 
                 wasm_bindgen_futures::spawn_local(async move {
@@ -50,11 +53,7 @@ pub fn app() -> Html {
                                                 Ok(json_value) => {
                                                     match json_value.as_string() {
                                                         Some(short_url) => {
-                                                            // todo: return the response somehow
                                                             short_url_state.set(short_url.clone());
-                                                            console::log_1(&"Response returned short url".into());
-                                                            console::log_1(&short_url.into());
-
                                                         }
                                                         None => { console::log_1(&"Unable to convert response to short url string".into()); }
                                                     }
@@ -83,31 +82,23 @@ pub fn app() -> Html {
                         }
                     }
                 });
-
-                // web_sys::window().unwrap().alert_with_message(&format!("URL Submitted: {}", value.clone())).unwrap(); for debugging
             }
         })
     };
 
-    let url_input_field_name = "urlInput".to_string();
-
     html! {
         <main class="d-flex flex-column align-items-center justify-content-center min-vh-100">
-
             <div>{ (*long_url_state).clone() }</div>
-
-            <div>{ (*short_url_state).clone() }</div>
-
+            <div> <a href={short_url_state.to_string()}>{ (*short_url_state).clone() }</a></div>
             <div>
-                <form onsubmit={on_submit_url(url_input_field_name.clone())}>
+                <form onsubmit={on_submit_url}>
                     <div class="mb-3">
-                        <label for={url_input_field_name.clone()} class="form-label fw-bold">{ "Enter a URL:" }</label>
+                        <label for="urlInput" class="form-label fw-bold">{ "Enter a URL:" }</label>
                         <input class="form-control mb-2" type="url" id="urlInput" name="urlInput" placeholder="Enter a long URL here" style="width: 100%;" required=true/>
                         <button class="btn btn-outline-success" type="submit">{ "Submit" }</button>
                     </div>
                 </form>
             </div>
         </main>
-
     }
 }
