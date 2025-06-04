@@ -10,10 +10,16 @@ pub fn app() -> Html {
         let url_state = url_state.clone();
         Callback::from(move |ev: SubmitEvent| {
             ev.prevent_default();
-            if let Some(value) = web_sys::window().unwrap()
-                .document().unwrap()
+            if let Some(value) = web_sys::window()
+                .unwrap()
+                .document()
+                .unwrap()
                 .get_element_by_id(&field_name)
-                .and_then(|el| el.dyn_ref::<HtmlInputElement>().map(|input| input.value()))
+                .and_then(|element| {
+                    element
+                        .dyn_ref::<HtmlInputElement>()
+                        .map(|input| input.value())
+                })
             {
                 console::log_1(&"Input successfully retrieved.".into());
                 url_state.set(value.clone());
@@ -25,15 +31,17 @@ pub fn app() -> Html {
         })
     };
 
+    let url_input_field_name = "urlInput".to_string();
+
     html! {
         <main class="d-flex flex-column align-items-center justify-content-center min-vh-100">
 
             <div>{ (*url_state).clone() }</div>
 
             <div>
-                <form onsubmit={on_submit_url("urlInput".to_string())}>
+                <form onsubmit={on_submit_url(url_input_field_name.clone())}>
                     <div class="mb-3">
-                        <label for="urlInput" class="form-label fw-bold">{ "Enter a URL:" }</label>
+                        <label for={url_input_field_name.clone()} class="form-label fw-bold">{ "Enter a URL:" }</label>
                         <input class="form-control mb-2" type="url" id="urlInput" name="urlInput" placeholder="Enter a long URL here" style="width: 100%;" required=true/>
                         <button class="btn btn-outline-success" type="submit">{ "Submit" }</button>
                     </div>
