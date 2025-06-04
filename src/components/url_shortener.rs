@@ -43,7 +43,7 @@ pub fn url_shortener() -> Html {
                     headers.set("Content-Type", "application/json").unwrap();
                     request_init.set_headers(&headers);
 
-                    match Request::new_with_str_and_init(&shorten_endpoint, &request_init) {
+                    match Request::new_with_str_and_init(shorten_endpoint, &request_init) {
                         Ok(request) => {
                             let window = web_sys::window().unwrap();
                             match JsFuture::from(window.fetch_with_request(&request)).await {
@@ -61,25 +61,22 @@ pub fn url_shortener() -> Html {
                                                 },
                                                 Err(e) => console::log_2(
                                                     &"Failed to parse json.".into(),
-                                                    &e.into(),
+                                                    &e,
                                                 ),
                                             }
                                         }
                                         Err(e) => {
-                                            console::log_2(&"Response JsValue cast to Response not successful.".into(), &e.into());
+                                            console::log_2(&"Response JsValue cast to Response not successful.".into(), &e);
                                         }
                                     }
                                 }
                                 Err(e) => {
-                                    console::log_2(
-                                        &"Retrieving window not successful.".into(),
-                                        &e.into(),
-                                    );
+                                    console::log_2(&"Retrieving window not successful.".into(), &e);
                                 }
                             }
                         }
                         Err(e) => {
-                            console::log_2(&"Request not successful.".into(), &e.into());
+                            console::log_2(&"Request not successful.".into(), &e);
                         }
                     }
                 });
